@@ -1,0 +1,9 @@
+-- Add migration script here
+CREATE TABLE IF NOT EXISTS positions (
+  id SERIAL PRIMARY KEY,
+  x INTEGER NOT NULL,
+  y INTEGER NOT NULL,
+  thought VARCHAR(99) NOT NULL,
+  user_ip TEXT NOT NULL,
+  submitted_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);

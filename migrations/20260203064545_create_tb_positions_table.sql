@@ -1,4 +1,3 @@
--- Add migration script here
 CREATE TABLE IF NOT EXISTS positions (
   id SERIAL PRIMARY KEY,
   x INTEGER NOT NULL,

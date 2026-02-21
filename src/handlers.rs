@@ -5,16 +5,25 @@ use sqlx::PgPool;
 use std::net::SocketAddr;
 
 #[derive(Deserialize, Serialize, sqlx::FromRow)]
+pub struct ThoughtJson {
+    x: i32,
+    y: i32,
+    thought: String,
+}
+
+#[derive(Serialize)]
 pub struct Thought {
     x: i32,
     y: i32,
+    #[serde(rename = "z")]
+    id: i32,
     thought: String,
 }
 
 pub async fn get_thoughts(
     State(pool): State<PgPool>,
 ) -> Result<Json<Vec<Thought>>, (StatusCode, String)> {
-    let thoughts = sqlx::query_as!(Thought, "SELECT x, y, thought FROM positions")
+    let thoughts = sqlx::query_as!(Thought, "SELECT x, y, id, thought FROM positions")
         .fetch_all(&pool)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -24,10 +33,10 @@ pub async fn get_thoughts(
 pub async fn submit_thought(
     State(pool): State<PgPool>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    Json(submission): Json<Thought>,
+    Json(submission): Json<ThoughtJson>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let x = submission.x.clamp(0, 700);
-    let y = submission.y.clamp(0, 880);
+    let x = submission.x.clamp(0, 1000);
+    let y = submission.y.clamp(0, 1000);
 
     let user_ip = addr.ip().to_string();
 

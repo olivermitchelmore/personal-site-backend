@@ -1,5 +1,5 @@
-use axum::http::StatusCode;
-use axum::{Json, extract::ConnectInfo, extract::State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::{Json, extract::ConnectInfo, extract::State, response::Redirect, Form};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use std::net::SocketAddr;
@@ -39,13 +39,18 @@ pub async fn get_thoughts(
 
 pub async fn submit_thought(
     State(pool): State<PgPool>,
+    headers: HeaderMap,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(submission): Json<ThoughtJson>,
 ) -> Result<StatusCode, (StatusCode, String)> {
     let x = submission.x.clamp(0, 1000);
     let y = submission.y.clamp(0, 1000);
 
-    let user_ip = addr.ip().to_string();
+    let user_ip = headers
+        .get("cf-connecting-ip")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| addr.ip().to_string());
 
     let thought = ammonia::clean(&submission.thought);
 
@@ -102,9 +107,14 @@ pub async fn health_check() -> StatusCode {
 pub async fn contact_submission(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(pool): State<PgPool>,
-    Json(submission): Json<ContactSubmission>,
-) -> Result<StatusCode, (StatusCode, String)> {
-    let user_ip = addr.ip().to_string();
+    headers: HeaderMap,
+    Form(submission): Form<ContactSubmission>,
+) -> Result<Redirect, (StatusCode, String)> {
+    let user_ip = headers
+        .get("cf-connecting-ip")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| addr.ip().to_string());
 
     // Prevent XSS for future admin panel
     let email = ammonia::clean(&submission.email);
@@ -123,6 +133,7 @@ pub async fn contact_submission(
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     let contact_count = count.count.unwrap_or(0);
 
+    // todo: redirect to proper error pages
     if contact_count >= 15 {
         return Err((
             StatusCode::TOO_MANY_REQUESTS,
@@ -130,7 +141,7 @@ pub async fn contact_submission(
         ));
     }
 
-    if submission.message.chars().count() > 4000 {
+    if message.chars().count() > 4000 {
         return Err((
             StatusCode::BAD_REQUEST,
             "Contact message must be below 4000 characters".to_string(),
@@ -153,6 +164,5 @@ pub async fn contact_submission(
             "Internal server error".to_string(),
         )
     })?;
-
-    Ok(StatusCode::CREATED)
+    Ok(Redirect::to("https://olliemitchelmore.com/thank-you"))
 }

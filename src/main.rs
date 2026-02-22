@@ -12,6 +12,7 @@ use tokio::time::{Duration, sleep};
 async fn main() -> Result<()> {
     dotenv().ok();
     let db_url = env::var("DATABASE_URL").context("Cannot find db url")?;
+    let frontend_domain = env::var("FRONTEND_DOMAIN").context("Cannot find frontend domain")?;
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -23,7 +24,7 @@ async fn main() -> Result<()> {
 
     tokio::spawn(cleanup(pool.clone()));
 
-    let router = routes::create_router(pool);
+    let router = routes::create_router(frontend_domain, pool);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     axum::serve(

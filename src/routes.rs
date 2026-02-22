@@ -10,6 +10,7 @@ pub fn create_router(pool: Pool<Postgres>) -> Router {
         .route("/health", get(handlers::health_check))
         .route("/thoughts", get(handlers::get_thoughts))
         .route("/thought-submission", post(handlers::submit_thought))
+        .route("/contact-submission", post(handlers::contact_submission))
         .layer(cors)
         .with_state(pool)
 }

@@ -73,10 +73,10 @@ pub async fn submit_thought(
         ));
     }
 
-    if thought.chars().count() > 99 {
+    if thought.chars().count() > 50 {
         return Err((
             StatusCode::BAD_REQUEST,
-            "Thought must be below 100 characters".to_string(),
+            "Thought must be below 50 characters".to_string(),
         ));
     }
 
@@ -141,10 +141,10 @@ pub async fn contact_submission(
         ));
     }
 
-    if message.chars().count() > 4000 {
+    if message.chars().count() > 20000 {
         return Err((
             StatusCode::BAD_REQUEST,
-            "Contact message must be below 4000 characters".to_string(),
+            "Contact message must be below 20000 characters".to_string(),
         ));
     }
 

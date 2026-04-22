@@ -42,7 +42,7 @@ async fn cleanup(pool: Pool<Postgres>) {
         println!("Cleaning up old thoughts...");
 
         let result =
-            sqlx::query("DELETE FROM positions WHERE submitted_at < NOW() - INTERVAL '7 days'")
+            sqlx::query("DELETE FROM positions WHERE submitted_at < NOW() - INTERVAL '90 days'")
                 .execute(&pool)
                 .await;
 
